@@ -10,17 +10,20 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 // server.js or app.js
 const signatureRoutes = require("./routes/signature");
+
 //Middleware
 app.use(
   cors({
     origin: "http://localhost:5173",
-    credentials: true,  
+    credentials: true,
   })
 );
 app.use(express.json());
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-app.use('/signed', express.static(path.join(__dirname, 'signed')));
+app.use("/signed", express.static(path.join(__dirname, "signed")));
+app.use("/api/share", require(`./routes/share`));
+
 app.use(express.static(path.join(__dirname, "public")));
 
 //Routes
