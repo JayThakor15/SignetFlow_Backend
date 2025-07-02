@@ -23,7 +23,7 @@ app.use(express.json());
 app.use(
   "/uploads",
   (req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "https://signetflow.netlify.app/"); // <-- match your frontend port, no trailing slash
+    res.header("Access-Control-Allow-Origin", "https://signetflow.netlify.app"); // <-- match your frontend port, no trailing slash
     res.header("Access-Control-Allow-Methods", "GET,OPTIONS");
     res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
     next();
