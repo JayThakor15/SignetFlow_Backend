@@ -19,7 +19,6 @@ router.post("/", auth, async (req, res) => {
         pass: process.env.EMAIL_PASS,
       },
     });
-    console.log(downloadlink);
     
 
     //send mail

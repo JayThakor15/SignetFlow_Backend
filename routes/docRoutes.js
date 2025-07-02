@@ -95,7 +95,6 @@ router.get("/rejected", auth, async (req, res) => {
     });
 
     res.json(docsWithReason);
-    console.log(docsWithReason);
     
   } catch (error) {
     console.error("Rejected docs error:", error);
