@@ -14,7 +14,7 @@ const signatureRoutes = require("./routes/signature");
 //Middleware
 app.use(
   cors({
-    origin: "https://signetflow.netlify.app/",
+    origin: "https://signetflow.netlify.app",
     credentials: true,
   })
 );
