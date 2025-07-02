@@ -20,7 +20,16 @@ app.use(
 );
 app.use(express.json());
 
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use(
+  "/uploads",
+  (req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "https://signetflow.netlify.app");
+    res.header("Access-Control-Allow-Methods", "GET,OPTIONS");
+    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    next();
+  },
+  express.static(path.join(__dirname, "uploads"))
+);
 app.use("/signed", express.static(path.join(__dirname, "signed")));
 app.use("/api/share", require(`./routes/share`));
 
