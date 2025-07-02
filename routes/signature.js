@@ -183,101 +183,96 @@ router.post("/finalize", auth, async (req, res) => {
   try {
     const { fileId } = req.body;
 
+    // Input validation
     if (!fileId) {
-      return res.status(400).json({ msg: "Missing file" });
+      return res.status(400).json({ msg: "Missing file ID" });
     }
+
+    // Fetch document and signatures
     const document = await Document.findById(fileId);
     if (!document) {
-      return res.status(400).json({ msg: "Document not found" });
-    } // Fetch pending signatures
+      return res.status(404).json({ msg: "Document not found" });
+    }
 
-    const signaure = await Signature.find({ 
+    const signatures = await Signature.find({ 
       file: fileId, 
       status: { $in: ["pending", "signed"] } 
     });
 
-    // Load the orignal path from uploads folder
-    const orignalPath = path.join(__dirname, "..", document.filepath);
-
-    //It's like taking the PDF file from your computer and putting all its content into a variable.
-    const existingPDfBytes = fs.readFileSync(orignalPath);
-    const pdfDoc = await PDFDocument.load(existingPDfBytes);
+    // Load original PDF
+    const originalPath = path.join(__dirname, "..", document.filepath);
+    const existingPdfBytes = fs.readFileSync(originalPath);
+    const pdfDoc = await PDFDocument.load(existingPdfBytes);
     pdfDoc.registerFontkit(fontkit);
 
-    const font = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
-    const availableFonts = {
-      "Great Vibes": fs.readFileSync(
-        path.join(__dirname, "..", "fonts", "GreatVibes-Regular.ttf")
-      ),
-      "Dancing Script": fs.readFileSync(
-        path.join(
-          __dirname,
-          "..",
-          "fonts",
-          "DancingScript-VariableFont_wght.ttf"
-        )
-      ),
-      Pacifico: fs.readFileSync(
-        path.join(__dirname, "..", "fonts", "Pacifico-Regular.ttf")
-      ),
-      Satisfy: fs.readFileSync(
-        path.join(__dirname, "..", "fonts", "Satisfy-Regular.ttf")
-      ),
-      "Shadows Into Light": fs.readFileSync(
-        path.join(__dirname, "..", "fonts", "ShadowsIntoLight-Regular.ttf")
-      ),
-      Caveat: fs.readFileSync(
-        path.join(__dirname, "..", "fonts", "Caveat-VariableFont_wght.ttf")
-      ),
-      "Homemade Apple": fs.readFileSync(
-        path.join(__dirname, "..", "fonts", "HomemadeApple-Regular.ttf")
-      ),
-      "Indie Flower": fs.readFileSync(
-        path.join(__dirname, "..", "fonts", "IndieFlower-Regular.ttf")
-      ),
-      // fallback
-      cursive: fs.readFileSync(
-        path.join(__dirname, "..", "fonts", "GreatVibes-Regular.ttf")
-      ),
-      Default: fs.readFileSync(
-        path.join(__dirname, "..", "fonts", "GreatVibes-Regular.ttf")
-      ),
+    // Load fonts
+    const fontPaths = {
+      "Great Vibes": "GreatVibes-Regular.ttf",
+      "Dancing Script": "DancingScript-VariableFont_wght.ttf",
+      "Pacifico": "Pacifico-Regular.ttf",
+      "Satisfy": "Satisfy-Regular.ttf",
+      "Shadows Into Light": "ShadowsIntoLight-Regular.ttf",
+      "Caveat": "Caveat-VariableFont_wght.ttf",
+      "Homemade Apple": "HomemadeApple-Regular.ttf",
+      "Indie Flower": "IndieFlower-Regular.ttf"
     };
 
+    const availableFonts = {};
+    for (const [fontName, fontFile] of Object.entries(fontPaths)) {
+      try {
+        availableFonts[fontName] = fs.readFileSync(
+          path.join(__dirname, "..", "fonts", fontFile)
+        );
+      } catch (err) {
+        console.warn(`Could not load font ${fontName}:`, err);
+      }
+    }
+
+    // Process each signature
     const pages = pdfDoc.getPages();
-    for (const sig of signaure) {
+    for (const sig of signatures) {
       const pageIndex = sig.pageNumber - 1;
-      if (pages[pageIndex]) {
+      if (pageIndex >= 0 && pageIndex < pages.length) {
         const page = pages[pageIndex];
         const pdfHeight = page.getHeight();
         const pdfWidth = page.getWidth();
-        const browserHeight = sig.renderedPageHeight || pdfHeight;
-        const browserWidth = sig.renderedPageWidth || pdfWidth;
 
-        const scaleY = pdfHeight / browserHeight;
-        const scaleX = pdfWidth / browserWidth;
+        // Use stored scaling factors if available
+        const widthScale = sig.scaleFactors?.width || 
+          (sig.renderedPageWidth ? pdfWidth / sig.renderedPageWidth : 1);
+        const heightScale = sig.scaleFactors?.height || 
+          pdfHeight / (sig.renderedPageHeight || pdfHeight);
 
-        // Convert browser (top-left origin) to PDF (bottom-left origin)
-        const pdfX = sig.xCoordinate * scaleX;
-        const pdfY = pdfHeight - sig.yCoordinate * scaleY;
+        // Convert coordinates (matches placement logic exactly)
+        const pdfX = sig.xCoordinate * widthScale;
+        const pdfY = pdfHeight - (sig.yCoordinate * heightScale);
 
-        // Get the font bytes for this signature
-        function normalizeFontName(fontName) {
-          if (!fontName) return "Default";
+        // Debug logging
+        console.log('Applying signature:', {
+          signatureId: sig._id,
+          page: sig.pageNumber,
+          browserCoords: { x: sig.xCoordinate, y: sig.yCoordinate },
+          pdfCoords: { x: pdfX, y: pdfY },
+          scales: { width: widthScale, height: heightScale },
+          pageSize: { width: pdfWidth, height: pdfHeight }
+        });
+
+        // Select font
+        const normalizeFontName = (fontName) => {
+          if (!fontName) return "Great Vibes";
           return fontName.replace(/['"]/g, "").split(",")[0].trim();
-        }
+        };
 
-        const normalizedFontName = normalizeFontName(sig.font);
-        const fontBytes =
-          availableFonts[normalizedFontName] || availableFonts.Default;
-
+        const fontName = normalizeFontName(sig.font);
+        const fontBytes = availableFonts[fontName] || availableFonts["Great Vibes"];
         const embeddedFont = await pdfDoc.embedFont(fontBytes);
 
+        // Draw signature
         const fontSize = 20;
         const ascent = embeddedFont.heightAtSize(fontSize);
         page.drawText(sig.signature, {
           x: pdfX,
-          y: pdfY - ascent, // Use ascent instead of fontSize * 0.8
+          y: pdfY - ascent,
           size: fontSize,
           font: embeddedFont,
           color: rgb(0, 0, 0),
@@ -285,28 +280,42 @@ router.post("/finalize", auth, async (req, res) => {
       }
     }
 
+    // Save signed PDF
     const newFilename = `signed-${Date.now()}.pdf`;
-    const newFilePath = path.join(__dirname, "..", "signed", newFilename);
-    const pdfBytes = await pdfDoc.save();
-    await Signature.updateMany(
-      { file: fileId, status: "pending" },
-      { $set: { status: "signed" } }
-    );
-    await Signature.deleteMany({ file: fileId, status: "pending" });
+    const signedDir = path.join(__dirname, "..", "signed");
+    
+    // Ensure signed directory exists
+    if (!fs.existsSync(signedDir)) {
+      fs.mkdirSync(signedDir, { recursive: true });
+    }
 
+    const newFilePath = path.join(signedDir, newFilename);
+    const pdfBytes = await pdfDoc.save();
     fs.writeFileSync(newFilePath, pdfBytes);
 
-    // When you finalize and save the signed PDF, store the path in the Document model:
+    // Update signatures and document
+    await Signature.updateMany(
+      { file: fileId, status: "pending" },
+      { $set: { status: "signed", signedAt: new Date() } }
+    );
+
     document.signedFile = `signed/${newFilename}`;
+    document.status = "signed";
     await document.save();
 
     res.json({
-      msg: "Signed PDF generated sucessfully",
+      success: true,
+      msg: "PDF finalized successfully",
       signedFile: `signed/${newFilename}`,
     });
+
   } catch (error) {
-    console.error("❌ Error finalizing signed PDF:", error);
-    res.status(500).json({ msg: "Failed to finalize signed PDF" });
+    console.error("Error in finalization:", error);
+    res.status(500).json({ 
+      success: false,
+      msg: "Failed to finalize PDF",
+      error: error.message 
+    });
   }
 });
 
@@ -359,7 +368,7 @@ router.get("/audit/:fileID", auth, async (req, res) => {
     const audit = await Signature.find({ file: fileid })
       .populate("signer", "name email")
       .select("signer signedAt ipAddress");
- 
+
     res.json(audit);
   } catch (error) {
     console.error(error);
@@ -368,42 +377,41 @@ router.get("/audit/:fileID", auth, async (req, res) => {
 });
 
 // Status Managment reason for accept the signed file
-router.post("/accept/:id",auth,async (req,res) => {
+router.post("/accept/:id", auth, async (req, res) => {
   try {
     const signature = await Signature.findById(req.params.id);
     if (!signature) {
-      return res.status(404).json({msg: "Signature not found"})
+      return res.status(404).json({ msg: "Signature not found" });
     }
     signature.status = "signed";
     signature.signedAt = new Date();
 
-    await signature.save()
+    await signature.save();
     // Upadating documents status
-    await Document.findByIdAndUpdate(signature.file, {status: "signed"})
-    res.json({msg: "Signature Accepted"})
+    await Document.findByIdAndUpdate(signature.file, { status: "signed" });
+    res.json({ msg: "Signature Accepted" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({msg: "Serve error"})
+    res.status(500).json({ msg: "Serve error" });
   }
-})
+});
 // Status Managment Reson for reject the signed file
-router.post("/reject/:id", auth, async (req,res)=>{
+router.post("/reject/:id", auth, async (req, res) => {
   try {
-    const {reason} = req.body;
+    const { reason } = req.body;
     const signature = await Signature.findById(req.params.id);
     if (!signature) {
-      return res.status(404).json({msg: "Signature not found"})
+      return res.status(404).json({ msg: "Signature not found" });
     }
     signature.status = "rejected";
     signature.rejectReason = reason;
 
     await signature.save();
-    await Document.findByIdAndUpdate(signature.file, {status: "rejected"})
-    res.json({msg: "Signature rejected"})
+    await Document.findByIdAndUpdate(signature.file, { status: "rejected" });
+    res.json({ msg: "Signature rejected" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({msg: "Server error"})
-    
+    res.status(500).json({ msg: "Server error" });
   }
-})
+});
 module.exports = router;
