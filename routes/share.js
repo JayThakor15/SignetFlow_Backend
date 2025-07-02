@@ -11,7 +11,7 @@ router.post("/", auth, async (req, res) => {
     if (!doc) {
       return res.status(404).json({ msg: "Document Not Found" });
     }
-    const downloadlink = `http://localhost:5000/${doc.signedFile}`;
+    const downloadlink = `https://signetflow-backend.onrender.com/${doc.signedFile}`;
     const transporter = nodeMailer.createTransport({
       service: `gmail`,
       auth: {
