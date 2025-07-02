@@ -57,5 +57,5 @@ mongoose
 app.get("/", (req, res) => res.send("API Running"));
 
 app.listen(PORT, () => {
-  console.log(`Server running on https://signetflow-backend.onrender.com:${PORT}`);
+  console.log(`Server running on https://signetflow.netlify.app':${PORT}`);
 });
