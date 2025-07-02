@@ -14,7 +14,7 @@ const signatureRoutes = require("./routes/signature");
 //Middleware
 app.use(
   cors({
-    origin: "https://signetflow-backend.onrender.com/", // <-- match your frontend port, no trailing slash
+    origin: "https://signetflow-backend.onrender.com", // <-- match your frontend port, no trailing slash
     credentials: true,
   })
 );
