@@ -42,12 +42,18 @@ Supports role-based sharing workflows
 ⚙️ Installation
 
 Clone the repo:
+
 git clone https://github.com/JayThakor15/SignetFlow_Backend.git
+
 cd signetflow-backend
+
+
 Install dependencies:
-bash
 npm install
+
+
 🗝️ Environment Variables
+
 Create a .env file in the root:
 
 env
@@ -57,6 +63,8 @@ JWT_SECRET=your_jwt_secret
 EMAIL_USER=your_email@gmail.com
 EMAIL_PASS=your_email_app_password
 CLIENT_URL=http://localhost:5173
+
+
 ✅ EMAIL_USER and EMAIL_PASS should use a Gmail App Password (not your real password).
 
 🏃‍♂️ Running Locally
@@ -108,9 +116,13 @@ Create an App Password and use it in .env
 ✅ Recommended free services:
 
 Render for backend
+
 Netlify for frontend
+
 MongoDB Atlas for database
+
 Update your CORS and .env as needed.
+
 
 ❤️ Contributions
 Feel free to fork, star, or submit pull requests.
