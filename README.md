@@ -21,26 +21,12 @@ Email signed PDFs directly (Nodemailer)
 Supports role-based sharing workflows
 
 📂 Project Structure
+<pre> / ├── server.js # Entry point (Express setup) ├── .env # Environment variables ├── /routes # Route definitions │ ├── authRoutes.js # Auth (register/login) │ ├── docRoutes.js # Upload, fetch, delete docs │ ├── signature.js # Place, accept/reject, finalize │ └── share.js # Email sharing ├── /models # Mongoose models │ ├── User.js │ ├── Document.js │ └── Signature.js ├── /middleware │ └── authMiddleware.js # JWT verification ├── /uploads # Uploaded PDF storage └── /signed # Signed/Finalized PDFs </pre>
 
-/
-├── server.js
-├── /routes
-│   ├── authRoutes.js
-│   ├── docRoutes.js
-│   ├── signature.js
-│   └── share.js
-├── /models
-│   ├── User.js
-│   ├── Document.js
-│   └── Signature.js
-├── /middleware
-│   └── authMiddleware.js
-├── /uploads
-└── /signed
 ⚙️ Installation
 1️⃣ Clone the repo:
 
-git clone https://github.com/YOUR_USERNAME/signetflow-backend.git
+git clone https://github.com/JayThakor15/SignetFlow_Backend.git
 cd signetflow-backend
 2️⃣ Install dependencies:
 
