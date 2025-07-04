@@ -49,6 +49,7 @@ cd signetflow-backend
 
 
 Install dependencies:
+
 npm install
 
 
@@ -57,11 +58,19 @@ npm install
 Create a .env file in the root:
 
 env
+
 PORT=5000
+
 MONGO_URI=your_mongodb_connection_string
+
 JWT_SECRET=your_jwt_secret
+
 EMAIL_USER=your_email@gmail.com
+
 EMAIL_PASS=your_email_app_password
+
+Add Client URL in utils > api.js 
+
 CLIENT_URL=http://localhost:5173
 
 
