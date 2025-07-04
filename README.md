@@ -12,23 +12,36 @@ Audit Trail: logs signer, timestamp, IP
 Signature status (Pending, Signed, Rejected)
 Email signed PDFs directly (Nodemailer)
 Supports role-based sharing workflows
+
 📂 Project Structure
-plaintext
+
 /
 ├── server.js            # Entry point (Express setup)
+
 ├── .env                 # Environment variables
+
 ├── /routes              # Route definitions
+
 │   ├── authRoutes.js    # Auth (register/login)
+
 │   ├── ...              # Other route files
+
 ├── /controllers         # Logic for handling requests
+
 ├── /models              # Mongoose models
+
 ├── /middleware          # Custom middleware (auth, error, etc.)
+
 ├── /utils               # Utility functions (email, PDF, etc.)
+
 ├── /uploads             # Uploaded PDF storage
+
 └── package.json         # Dependencies and scripts
+
+
 ⚙️ Installation
+
 Clone the repo:
-bash
 git clone https://github.com/JayThakor15/SignetFlow_Backend.git
 cd signetflow-backend
 Install dependencies:
@@ -47,27 +60,45 @@ CLIENT_URL=http://localhost:5173
 ✅ EMAIL_USER and EMAIL_PASS should use a Gmail App Password (not your real password).
 
 🏃‍♂️ Running Locally
-bash
-npm start
+
 Server runs at: http://localhost:5000
+
 API base path: /api
 
+
 📦 API Routes
+
 Auth
+
 POST /api/auth/register
+
 POST /api/auth/login
+
+
 Documents
+
 POST /api/docs/upload
+
 GET /api/docs
+
 DELETE /api/docs/:id
+
+
 Signatures
+
 POST /api/signature/place
+
 POST /api/signature/accept/:id
+
 POST /api/signature/reject/:id
+
 POST /api/signature/finalize
+
 GET /api/audit/:fileId
+
 Share
 POST /api/share/send
+
 ✉️ Email Sending
 Uses Nodemailer with Gmail SMTP.
 
